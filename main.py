@@ -1,4 +1,3 @@
-from tkinter import Y
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,7 +5,7 @@ from datetime import date, timedelta, datetime
 
 from api_request import GoogleRequests
 from filter_data import correlation_filter
-from models import ewls, make_vector
+from models import ewls, make_vector, stationary_ls
 from process_data import convert_to_weekly, get_data_for_comparison, get_mean_from_csv, predict_dataframe
 
 plt.style.use('ggplot')
@@ -31,7 +30,7 @@ def get_anchortime(get_time):
         return anchor_time
 
 COUNTRY = "united states"
-KEYWORDS = ['nausea']
+KEYWORDS = ['nausea', 'stomach pain']
 CAT = '0'
 TIMEFRAMES = ['today 12-m', 'today 3-m', 'today 1-m']
 GPROP = ''
@@ -67,15 +66,15 @@ one_year_weekly_covid_data_array = one_year_weekly_covid_data.to_numpy()
 # BUILDING THE MODEL 
 # X_predict = predict_requests.arrange_data(KEYWORDS) # ----> SWAP TO WORD_BANK
 X_compare = compare_requests.arrange_data(KEYWORDS)
-print(X_compare)
+# print(X_compare)
 # X_compare.plot()
 
 one_year_weekly_covid_data = get_data_for_comparison(weekly_covid_data)
 #vector_data = make_vector(X_predict)
 print("VECTOR")
 vector_data_compare = make_vector(X_compare)
-print(len(vector_data_compare))
-print("Weekly covid array")
+print(len(vector_data_compare), "vector compare")
+print(len(one_year_weekly_covid_data), "weekly covid array")
 #Y_predict = ewls(vector_data, len(X_predict.index), len(KEYWORDS), weekly_covid_array) # ----> COUNT ROWS AFTER
 Y_compare = ewls(vector_data_compare, len(X_compare.index), len(KEYWORDS), one_year_weekly_covid_data_array)
 
@@ -83,8 +82,9 @@ Y_compare = ewls(vector_data_compare, len(X_compare.index), len(KEYWORDS), one_y
 # Y_predict_dataframe = predict_dataframe(Y_predict, True)
 Y_compare_dataframe = predict_dataframe(Y_compare, False)
 
-
-
+print("stationary ls")
+Y_stationary_ls = stationary_ls(vector_data_compare, len(X_compare.index), len(KEYWORDS), one_year_weekly_covid_data_array)
+Y_stationary_ls_dataframe = predict_dataframe(Y_stationary_ls, False)
 # print(one_year_weekly_covid_data)
 # print(len(one_year_weekly_covid_data))
 # print(Y_compare_dataframe)
@@ -92,6 +92,7 @@ print(len(Y_compare_dataframe.index))
 print(len(one_year_weekly_covid_data_array))
 
 plt.figure()
+plt.plot(Y_stationary_ls_dataframe)
 plt.plot(Y_compare_dataframe)
 plt.plot(one_year_weekly_covid_data)
 plt.show()
